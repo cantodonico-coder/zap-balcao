@@ -6,6 +6,7 @@ Foco inicial: **assistência técnica** (consulta de OS, orçamento, garantia, a
 ## Arquivos
 - `index.html`: editor + simulador (abre no navegador, sem instalar nada)
 - `ZapBalcao.gs`: adaptador modo econômico (Apps Script + AutoResponder for WA)
+- `INSTALAR-ZAP-BALCAO.bat`: assistente de instalação em 6 passos (Windows)
 
 ## Modos
 | Modo | Status |
@@ -22,6 +23,16 @@ Foco inicial: **assistência técnica** (consulta de OS, orçamento, garantia, a
 5. Apps Script publicado como App da Web → URL no AutoResponder
 
 Motor único, independente do canal: o mesmo fluxo roda no simulador, no Android e na API.
+O bloco `Motor` é idêntico em `index.html` e `ZapBalcao.gs`: ao mudar um, copie para o outro.
+
+## O que o robô entende
+- Saudações do jeito que o cliente escreve ("oii", "boa tarde, tudo bem?")
+- Consulta direta: "os 1042", "os1042", "o.s. 1042" ou só o número
+- Perguntas que citam uma opção do menu ("qual o endereço?", "quero falar com atendente")
+- Palavras-chave por palavra inteira (com plural)
+- "obrigado", "valeu": responde a despedida · "ok", 👍: fica quieto
+- Horário com fechamento diferente no sábado
+- Colunas pessoais da planilha (cliente, telefone, cpf) ficam fora da resposta
 
 ## Roadmap
 - [ ] Piloto real (assistência técnica)

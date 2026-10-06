@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Zap Balcão — robô de atendimento · NicoShake Labs</title>
+<meta name="description" content="Monte e teste o robô de atendimento do seu WhatsApp, sem instalar nada.">
+<meta name="theme-color" content="#e2550a">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
@@ -89,6 +91,10 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-
 .btn.ghost:hover{border-color:var(--ink)}
 .btn.danger.arm{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .ok{font-family:var(--mono);font-size:12px;color:var(--accent)}
+.pend{margin:0;padding:10px 12px 10px 28px;border-radius:11px;background:var(--soft);font-size:13px}
+.pend li{margin:2px 0}
+.pend li.tit{list-style:none;margin-left:-16px;font-weight:600}
+.pend.limpo{list-style:none;padding-left:12px}
 
 /* phone */
 .simcol{position:sticky;top:calc(env(safe-area-inset-top,0px) + 14px)}
@@ -133,12 +139,12 @@ footer{margin-top:26px;font-family:var(--mono);font-size:11.5px;color:var(--mute
   <header class="top">
     <div class="brand">
       <span class="logo">Nc9</span>
-      <div><h1><span>Zap</span> Balcão</h1><p class="tag">robô de atendimento p/ WhatsApp</p></div>
+      <div><h1><span>Zap</span> Balcão</h1><p class="tag">seu WhatsApp respondendo sozinho</p></div>
     </div>
     <nav class="modes" aria-label="Modos">
       <span class="mode on">● Simulador</span>
-      <span class="mode">Econômico · Android <em>em breve</em></span>
-      <span class="mode">Oficial · API <em>em breve</em></span>
+      <span class="mode">WhatsApp no Android <em>piloto</em></span>
+      <span class="mode">API oficial <em>em breve</em></span>
     </nav>
   </header>
 
@@ -156,10 +162,11 @@ footer{margin-top:26px;font-family:var(--mono);font-size:11.5px;color:var(--mute
         <label>Nome<input data-k="nome"></label>
         <label>Saudação <small>use {nome}</small><textarea data-k="saudacao" rows="3"></textarea></label>
         <label>Quando não entender<textarea data-k="naoEntendi" rows="2"></textarea></label>
+        <label>Quando agradecerem <small>obrigado, valeu, tchau</small><textarea data-k="despedida" rows="2" placeholder="Por nada! 😊 Precisando, é só chamar."></textarea></label>
       </div></details>
 
       <details class="card"><summary><span class="num">02</span>Horário</summary><div class="body">
-        <div class="row"><label>Abre<input type="time" data-k="horario.abre"></label><label>Fecha<input type="time" data-k="horario.fecha"></label></div>
+        <div class="row"><label>Abre<input type="time" data-k="horario.abre"></label><label>Fecha<input type="time" data-k="horario.fecha"></label><label>Sábado fecha <small>opcional</small><input type="time" data-k="horario.fechaSab"></label></div>
         <div class="dias" id="dias"></div>
         <label>Mensagem fora do horário<textarea data-k="horario.msgFora" rows="2"></textarea></label>
       </div></details>
@@ -178,16 +185,19 @@ footer{margin-top:26px;font-family:var(--mono);font-size:11.5px;color:var(--mute
       <details class="card"><summary><span class="num">05</span>Planilha de consulta</summary><div class="body">
         <div class="row"><label>Nome do item<input data-k="consulta.termo" placeholder="OS, Pedido, Agendamento…"></label><label>Coluna-chave<input data-k="consulta.chave" placeholder="os"></label></div>
         <label>Palavras que disparam <small>ex.: os, ordem, protocolo</small><input data-k="consulta.gatilhos"></label>
+        <label>Colunas que o robô não mostra <small>ex.: cliente, telefone</small><input data-k="consulta.ocultar"></label>
+        <p class="hint">Qualquer pessoa que souber o número recebe a resposta. Deixe de fora o que é pessoal.</p>
         <p class="hint">Cole direto do Google Sheets/Excel. 1ª linha = cabeçalho. Coluna "status" sai em negrito.</p>
         <textarea data-k="planilhaCSV" rows="7" class="mono"></textarea>
         <span class="ok" id="osCount"></span>
       </div></details>
 
       <details class="card"><summary><span class="num">06</span>Exportar / importar</summary><div class="body">
-        <p class="hint">Este JSON é o bot inteiro. O mesmo arquivo roda nos modos Econômico e Oficial.</p>
+        <ul class="pend" id="pend"></ul>
+        <p class="hint">Este texto é o seu robô inteiro. Clique em Copiar e cole na planilha (célula A1 da aba Config).</p>
         <textarea id="json" rows="9" class="mono" spellcheck="false"></textarea>
         <div class="row">
-          <button class="btn" id="copyJson">Copiar</button>
+          <button class="btn" id="copyJson">Copiar robô</button>
           <button class="btn ghost" id="importJson">Importar colado</button>
         </div>
         <span class="ok" id="ioMsg"></span>
@@ -196,7 +206,7 @@ footer{margin-top:26px;font-family:var(--mono);font-size:11.5px;color:var(--mute
 
     <section id="simcol" class="pane simcol">
       <div class="phone"><div class="screen">
-        <div class="chat-head"><div class="avatar" id="avatar">A</div><div><b id="chatName"></b><small>bot ativo · simulador</small></div></div>
+        <div class="chat-head"><div class="avatar" id="avatar">A</div><div><b id="chatName"></b><small>robô ativo · simulador</small></div></div>
         <div class="chat" id="chat"></div>
         <div class="quick" id="quick"></div>
         <div class="composer"><input id="msg" placeholder="Mensagem do cliente" autocomplete="off"><button id="send" aria-label="Enviar">➤</button></div>
@@ -208,7 +218,7 @@ footer{margin-top:26px;font-family:var(--mono);font-size:11.5px;color:var(--mute
     </section>
   </main>
 
-  <footer>NicoShake Labs · Zap Balcão MVP · motor independente do canal (simulador → Android → API oficial)</footer>
+  <footer>Zap Balcão · NicoShake Labs · o que você testa aqui é o que o cliente recebe no WhatsApp</footer>
 </div>
 
 <script>
@@ -216,9 +226,16 @@ footer{margin-top:26px;font-family:var(--mono);font-size:11.5px;color:var(--mute
    responder(texto, cfg, sessao, agora, opts) -> { respostas:[...], sessao }
    O mesmo motor será usado pelos adaptadores AutoResponder e Cloud API. */
 const Motor = (() => {
-  const norm = s => (s || '').toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+  const norm = s => (s || '').toString().normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+  const limpa = s => norm(s).replace(/[!?.,;:]+/g, ' ').replace(/\s+/g, ' ').trim();
   const fill = (t, cfg) => (t || '').replace(/\{nome\}/g, cfg.nome || '');
   const SAUDACOES = ['oi','ola','menu','inicio','bom dia','boa tarde','boa noite','opa','eae','e ai','0','voltar'];
+  const RE_SAUDA = /^(?:oi+e*|ola+|opa+|eae+|e ai|alo+|bom dia|boa tarde|boa noite|menu|inicio|voltar)\b/;
+  const RE_OBRIGADO = /\b(?:obrigad[oa]s?|obg|brigad[oa]|valeu|vlw|agradeco|tchau|ate mais|ate logo)\b/;
+  const RE_OK = /^(?:ok+|okay|blz|beleza|certo|ta bom|show|perfeito|entendi|combinado|joia)$/;
+  const STOP = ['para','como','com','meu','minha','meus','minhas','falar','consultar','pedir','ver','acompanhar','quero','sobre','mais','voce','voces'];
+  const DESPEDIDA = 'Por nada! 😊 Precisando, é só chamar.';
+  const OCULTAR = 'cliente, nome, telefone, celular, cpf, email';
 
   function tabela(csv){
     const lines = (csv || '').split(/\r?\n/).filter(l => l.trim());
@@ -229,88 +246,133 @@ const Motor = (() => {
     rows.cols = raw.map((r,i) => ({ k: head[i], label: r.charAt(0).toUpperCase() + r.slice(1) }));
     return rows;
   }
-  const conf = cfg => Object.assign({ termo: 'OS', gatilhos: 'os', chave: 'os' }, cfg.consulta || {});
+  const conf = cfg => Object.assign({ termo: 'OS', gatilhos: 'os', chave: 'os', ocultar: OCULTAR }, cfg.consulta || {});
   const escRe = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const soNum = s => (s || '').replace(/\D/g, '').replace(/^0+(?=\d)/, '');
   function dentroHorario(cfg, agora){
     const h = cfg.horario; if (!h || !h.abre || !h.fecha) return true;
     if (!(h.dias || []).includes(agora.getDay())) return false;
+    const fecha = (agora.getDay() === 6 && h.fechaSab) ? h.fechaSab : h.fecha;
     const m = agora.getHours()*60 + agora.getMinutes();
-    const [a1,a2] = h.abre.split(':').map(Number), [f1,f2] = h.fecha.split(':').map(Number);
+    const [a1,a2] = h.abre.split(':').map(Number), [f1,f2] = fecha.split(':').map(Number);
     return m >= a1*60+a2 && m < f1*60+f2;
   }
-  const menu = cfg => cfg.menu.map((it,i) => `*${i+1}* — ${it.titulo}`).join('\n') + '\n\nDigite o número da opção.';
+  const menu = cfg => (cfg.menu || []).length ? cfg.menu.map((it,i) => `*${i+1}* — ${it.titulo}`).join('\n') + '\n\nDigite o número da opção.' : '';
+  // devolve { achou, txt }; colunas em "ocultar" nunca saem na resposta
   function buscar(cfg, num){
-    const C = conf(cfg), rows = tabela(cfg.planilhaCSV), ch = norm(C.chave);
-    const r = rows.find(x => (x[ch] || '').replace(/\D/g,'') === num);
-    if (!r) return `Não encontrei ${C.termo} *${num}*. Confira o número no seu comprovante.`;
-    const linhas = rows.cols.filter(c => c.k !== ch && r[c.k]).map(c => `${c.label}: ${c.k === 'status' ? '*' + r[c.k] + '*' : r[c.k]}`);
-    return `📋 *${C.termo} ${r[ch]}*\n` + linhas.join('\n');
+    const C = conf(cfg), rows = tabela(cfg.planilhaCSV), ch = norm(C.chave), alvo = soNum(num);
+    const r = rows.find(x => soNum(x[ch]) === alvo && alvo !== '');
+    if (!r) return { achou: false, txt: `Não encontrei ${C.termo} *${num}*. Confira o número no seu comprovante.` };
+    const fora = (C.ocultar || '').split(',').map(norm).filter(Boolean);
+    const linhas = rows.cols.filter(c => c.k !== ch && r[c.k] && !fora.includes(c.k)).map(c => `${c.label}: ${c.k === 'status' ? '*' + r[c.k] + '*' : r[c.k]}`);
+    return { achou: true, txt: `📋 *${C.termo} ${r[ch]}*\n` + (linhas.length ? linhas.join('\n') : 'Ainda sem atualização.') };
+  }
+  // "qual o endereço?" abre a opção "Endereço e horário" sem o cliente digitar o número
+  const palavrasDe = s => limpa(s).replace(/[^a-z0-9 ]+/g, ' ').split(' ').filter(w => w.length >= 4 && !STOP.includes(w));
+  function opcaoPorTitulo(cfg, t){
+    const ws = t.split(' '); let melhor = -1, pontos = 0;
+    (cfg.menu || []).forEach((it,i) => {
+      const n = palavrasDe(it.titulo).filter(w => ws.some(x => x === w || x === w + 's' || x + 's' === w)).length;
+      if (n > pontos) { pontos = n; melhor = i; }
+    });
+    return melhor;
   }
 
   function responder(texto, cfg, sessao = {}, agora = new Date(), opts = {}){
-    const s = { ...sessao }, out = [], t = norm(texto).replace(/[!?.,;:]+/g,' ').replace(/\s+/g,' ').trim();
-    const fim = () => ({ respostas: out, sessao: s });
+    const s = { ...sessao }, out = [], t = limpa(texto).replace(/^(?:opcao|op|numero) (?=\d+$)/, '');   // "opção 2" = "2"
+    const fim = () => ({ respostas: out.filter(x => x && x.trim()), sessao: s });
+    const itens = cfg.menu || [], regras = cfg.palavras || [];
+    const saudar = () => { s.iniciado = true; s.etapa = null; s.tent = 0; out.push(fill(cfg.saudacao, cfg), menu(cfg)); return fim(); };
+    const abrir = i => {
+      const it = itens[i]; s.iniciado = true; s.etapa = null; s.tent = 0;
+      if (it.tipo === 'os' || it.tipo === 'consulta') s.etapa = 'consulta';
+      if (it.tipo === 'humano') { s.humano = true; s.avisoHumano = true; }
+      out.push(fill(it.texto, cfg));
+      if (it.tipo === 'texto') out.push('Digite *menu* para voltar.');
+      return fim();
+    };
+    const consultar = num => {
+      const r = buscar(cfg, num); s.iniciado = true;
+      if (r.achou) { s.etapa = null; s.tent = 0; out.push(r.txt, 'Digite *menu* para mais opções.'); return fim(); }
+      s.tent = (s.tent || 0) + 1;
+      if (s.tent >= 2) { s.etapa = null; s.tent = 0; out.push(r.txt, 'Digite *menu* para ver as opções ou falar com um atendente.'); }
+      else { s.etapa = 'consulta'; out.push(r.txt + ' Pode enviar de novo, ou digite *menu*.'); }
+      return fim();
+    };
 
-    if (!s.avisoHorario && !opts.ignorarHorario && !dentroHorario(cfg, agora)) { out.push(fill(cfg.horario.msgFora, cfg)); s.avisoHorario = true; }
+    if (!s.avisoHorario && !opts.ignorarHorario && !dentroHorario(cfg, agora)) { out.push(fill((cfg.horario || {}).msgFora, cfg)); s.avisoHorario = true; }
 
     // atendimento humano: robô fica quieto
     if (s.humano) {
-      if (t === 'menu') { s.humano = false; s.avisoHumano = false; out.push(fill(cfg.saudacao, cfg), menu(cfg)); }
-      else if (!s.avisoHumano) { out.push('Mensagem registrada. Um atendente responde em breve. (Digite *menu* para voltar ao robô)'); s.avisoHumano = true; }
+      if (t === 'menu') { s.humano = false; s.avisoHumano = false; return saudar(); }
+      if (!s.avisoHumano) { out.push('Mensagem registrada. Um atendente responde em breve. (Digite *menu* para voltar ao robô)'); s.avisoHumano = true; }
       return fim();
     }
 
-    // consulta na planilha (direta "os 1042"/"pedido 501" ou após escolher a opção)
+    // consulta direta: "os 1042", "os1042", "o.s. 1042", "pedido 501"
     const C = conf(cfg);
     const gat = (C.gatilhos || '').split(',').map(norm).filter(Boolean).map(escRe).join('|');
-    const mOS = gat ? t.match(new RegExp('\\b(?:' + gat + ')\\b\\D{0,6}(\\d{2,})')) : null;
-    if (mOS || s.etapa === 'consulta') {
-      const num = mOS ? mOS[1] : (t.match(/\d+/) || [])[0];
-      s.iniciado = true;
-      if (num) { s.etapa = null; out.push(buscar(cfg, num), 'Digite *menu* para mais opções.'); return fim(); }
-      if (!SAUDACOES.includes(t)) { out.push(`Me envie só o *número* (${C.termo}).`); return fim(); }
-      s.etapa = null;
+    const mOS = gat ? t.replace(/\bo s\b/g, 'os').match(new RegExp('\\b(?:' + gat + ')(?:\\b\\D{0,6}|\\s*)(\\d{2,})')) : null;
+    if (mOS) return consultar(mOS[1]);
+
+    // esperando o número depois de escolher a opção de consulta
+    const esperando = s.etapa === 'consulta';
+    if (esperando) {
+      const num = (t.match(/\d+/) || [])[0];
+      const ehOpcao = num && /^\d$/.test(t) && itens[Number(t) - 1];
+      if (num && !ehOpcao) return consultar(num);
     }
 
     // saudação / menu
-    if (SAUDACOES.includes(t)) { s.iniciado = true; s.etapa = null; out.push(fill(cfg.saudacao, cfg), menu(cfg)); return fim(); }
+    if (SAUDACOES.includes(t)) return saudar();
 
-    // opção do menu
+    // número: opção do menu, ou o próprio número de consulta enviado sozinho
     if (/^\d+$/.test(t)) {
-      const it = cfg.menu[Number(t) - 1];
-      if (it) {
-        s.iniciado = true;
-        if (it.tipo === 'os' || it.tipo === 'consulta') s.etapa = 'consulta';
-        if (it.tipo === 'humano') { s.humano = true; s.avisoHumano = true; }
-        out.push(fill(it.texto, cfg));
-        if (it.tipo === 'texto') out.push('Digite *menu* para voltar.');
-        return fim();
-      }
+      if (itens[Number(t) - 1]) return abrir(Number(t) - 1);
+      if (t.length >= 3) return consultar(t);
     }
 
-    // palavras-chave
-    for (const r of cfg.palavras) {
-      const ks = (r.palavras || '').split(',').map(norm).filter(Boolean);
-      if (ks.some(k => t.includes(k))) { s.iniciado = true; out.push(fill(r.resposta, cfg)); return fim(); }
+    // palavras-chave (palavra inteira, aceita plural)
+    const tt = ' ' + t + ' ';
+    for (const r of regras) {
+      const ks = (r.palavras || '').split(',').map(limpa).filter(Boolean);
+      if (ks.some(k => tt.includes(' ' + k + ' ') || tt.includes(' ' + k + 's '))) { s.iniciado = true; s.etapa = null; s.tent = 0; out.push(fill(r.resposta, cfg)); return fim(); }
     }
+
+    // pergunta que cita uma opção do menu
+    const op = opcaoPorTitulo(cfg, t);
+    if (op >= 0) return abrir(op);
+
+    // ainda esperando o número e nada acima serviu
+    if (esperando) {
+      s.tent = (s.tent || 0) + 1;
+      if (s.tent >= 2) { s.etapa = null; s.tent = 0; out.push(fill(cfg.naoEntendi, cfg), menu(cfg)); }
+      else out.push(`Me envie só o *número* (${C.termo}). Se não tiver, digite *menu*.`);
+      return fim();
+    }
+
+    if (RE_OBRIGADO.test(t)) { s.iniciado = true; out.push(fill(cfg.despedida || DESPEDIDA, cfg)); return fim(); }
+    if (RE_SAUDA.test(t)) return saudar();
+    if (s.iniciado && (RE_OK.test(t) || !/[a-z0-9]/.test(t))) return fim();   // "ok", 👍: não responde
 
     // 1º contato sem match → saudação; depois → não entendi
-    if (!s.iniciado) { s.iniciado = true; out.push(fill(cfg.saudacao, cfg), menu(cfg)); }
-    else out.push(fill(cfg.naoEntendi, cfg), menu(cfg));
+    if (!s.iniciado) return saudar();
+    out.push(fill(cfg.naoEntendi, cfg), menu(cfg));
     return fim();
   }
   return { responder, tabela, norm, conf };
 })();
 
 /* ================= MODELOS POR NICHO ================= */
-const HOR = (dias, msg) => ({ abre: '08:30', fecha: '18:00', dias, msgFora: msg });
+const HOR = (dias, msg, sab) => ({ abre: '08:30', fecha: '18:00', fechaSab: sab || '', dias, msgFora: msg });
+const TCHAU = 'Por nada! 😊 Precisando, é só chamar.';
 const MODELOS = {
   assistencia: { nome: 'Assistência técnica', cfg: {
     versao: 1, nicho: 'assistencia', nome: 'Assistência Exemplo',
     saudacao: 'Olá! 👋 Aqui é o atendimento automático da *{nome}*.\nComo posso ajudar?',
-    naoEntendi: 'Desculpe, não entendi. 🤔',
-    horario: HOR([1,2,3,4,5,6], 'Estamos fora do horário agora (seg a sáb, 8h30–18h). Deixe sua mensagem que respondemos assim que abrirmos. 🕗'),
-    consulta: { termo: 'OS', gatilhos: 'os, ordem, protocolo', chave: 'os' },
+    naoEntendi: 'Desculpe, não entendi. 🤔', despedida: TCHAU,
+    horario: HOR([1,2,3,4,5,6], 'Estamos fora do horário agora (seg a sex 8h30–18h, sáb até 12h). Deixe sua mensagem que respondemos assim que abrirmos. 🕗', '12:00'),
+    consulta: { termo: 'OS', gatilhos: 'os, ordem, protocolo', chave: 'os', ocultar: 'cliente, telefone, cpf' },
     menu: [
       { titulo: 'Consultar minha OS', tipo: 'consulta', texto: 'Me envie o *número da OS* que está no seu comprovante. 🔎' },
       { titulo: 'Pedir orçamento', tipo: 'texto', texto: 'Pra orçamento, envie:\n• Marca e modelo do aparelho\n• O que está acontecendo\n• Foto, se possível\n\nRespondemos com valor e prazo. 🛠️' },
@@ -320,6 +382,7 @@ const MODELOS = {
     palavras: [
       { palavras: 'preco, valor, quanto custa, orcamento', resposta: 'Os valores dependem do modelo e do defeito. Digite *2* para pedir um orçamento. 😉' },
       { palavras: 'garantia', resposta: 'Todo serviço tem *90 dias de garantia*. Guarde seu comprovante. ✅' },
+      { palavras: 'onde fica, localizacao, que horas, aberto, abre, fecha, sabado, domingo', resposta: 'Digite *3* para ver endereço e horário. 📍' },
       { palavras: 'pix, cartao, pagamento', resposta: 'Aceitamos Pix, débito e crédito (até 3x sem juros).' }
     ],
     planilhaCSV: 'os;cliente;aparelho;status;previsão\n1042;Pessoa 1;Notebook;Pronto para retirada;\n1043;Pessoa 2;Celular;Aguardando peça;10/10\n1044;Pessoa 3;Impressora;Em análise;07/10'
@@ -327,9 +390,9 @@ const MODELOS = {
   oficina: { nome: 'Oficina mecânica', cfg: {
     versao: 1, nicho: 'oficina', nome: 'Oficina Exemplo',
     saudacao: 'Olá! 🚗 Aqui é o atendimento automático da *{nome}*.\nComo posso ajudar?',
-    naoEntendi: 'Desculpe, não entendi. 🤔',
-    horario: HOR([1,2,3,4,5,6], 'Estamos fora do horário (seg a sáb, 8h30–18h). Deixe sua mensagem que retornamos. 🔧'),
-    consulta: { termo: 'OS', gatilhos: 'os, ordem', chave: 'os' },
+    naoEntendi: 'Desculpe, não entendi. 🤔', despedida: TCHAU,
+    horario: HOR([1,2,3,4,5,6], 'Estamos fora do horário (seg a sex 8h30–18h, sáb até 12h). Deixe sua mensagem que retornamos. 🔧', '12:00'),
+    consulta: { termo: 'OS', gatilhos: 'os, ordem', chave: 'os', ocultar: 'cliente, telefone, cpf' },
     menu: [
       { titulo: 'Situação do meu veículo', tipo: 'consulta', texto: 'Me envie o *número da OS* do seu veículo. 🔎' },
       { titulo: 'Agendar revisão', tipo: 'texto', texto: 'Pra agendar, envie:\n• Modelo e ano do veículo\n• Serviço desejado\n• Melhor dia e turno\n\nConfirmamos por aqui. 📅' },
@@ -339,6 +402,7 @@ const MODELOS = {
     palavras: [
       { palavras: 'oleo, revisao, alinhamento, balanceamento', resposta: 'Fazemos sim! Digite *2* para agendar. 🔧' },
       { palavras: 'guincho, reboque', resposta: 'Pra guincho, digite *4* e fale direto com a equipe.' },
+      { palavras: 'onde fica, localizacao, que horas, aberto, abre, fecha, sabado, domingo', resposta: 'Digite *3* para ver endereço e horário. 📍' },
       { palavras: 'pix, cartao, pagamento', resposta: 'Aceitamos Pix, débito e crédito.' }
     ],
     planilhaCSV: 'os;cliente;veículo;serviço;status;previsão\n301;Pessoa 1;Hatch 2018;Revisão completa;Em execução;hoje 17h\n302;Pessoa 2;Sedan 2015;Freios;Aguardando peça;09/10'
@@ -346,9 +410,9 @@ const MODELOS = {
   loja: { nome: 'Loja / comércio', cfg: {
     versao: 1, nicho: 'loja', nome: 'Loja Exemplo',
     saudacao: 'Olá! 🛍️ Bem-vindo à *{nome}*.\nComo posso ajudar?',
-    naoEntendi: 'Desculpe, não entendi. 🤔',
+    naoEntendi: 'Desculpe, não entendi. 🤔', despedida: TCHAU,
     horario: HOR([1,2,3,4,5,6], 'Estamos fora do horário agora. Deixe sua mensagem que respondemos assim que abrirmos. 🕗'),
-    consulta: { termo: 'Pedido', gatilhos: 'pedido, compra', chave: 'pedido' },
+    consulta: { termo: 'Pedido', gatilhos: 'pedido, compra', chave: 'pedido', ocultar: 'cliente, telefone, cpf' },
     menu: [
       { titulo: 'Acompanhar meu pedido', tipo: 'consulta', texto: 'Me envie o *número do pedido*. 📦' },
       { titulo: 'Ver catálogo', tipo: 'texto', texto: 'Confira nosso catálogo: (coloque o link aqui) 🛒' },
@@ -358,6 +422,7 @@ const MODELOS = {
     palavras: [
       { palavras: 'troca, devolucao', resposta: 'Trocas em até *7 dias* com nota fiscal. ✅' },
       { palavras: 'frete, entrega', resposta: 'Digite *3* para ver pagamento e entrega. 🚚' },
+      { palavras: 'onde fica, endereco, localizacao, que horas, horario, aberto, abre, fecha, sabado, domingo', resposta: '📍 Rua Exemplo, 000\n🕗 Seg a sáb, 8h30–18h' },
       { palavras: 'preco, valor, quanto custa, tem', resposta: 'Digite *2* para ver o catálogo ou *4* para falar com um vendedor.' }
     ],
     planilhaCSV: 'pedido;cliente;produto;status;entrega\n501;Pessoa 1;Fone bluetooth;Enviado;amanhã\n502;Pessoa 2;Capinha;Separando;08/10'
@@ -365,9 +430,9 @@ const MODELOS = {
   salao: { nome: 'Salão / estética', cfg: {
     versao: 1, nicho: 'salao', nome: 'Salão Exemplo',
     saudacao: 'Olá! ✨ Aqui é o atendimento automático do *{nome}*.\nComo posso ajudar?',
-    naoEntendi: 'Desculpe, não entendi. 🤔',
+    naoEntendi: 'Desculpe, não entendi. 🤔', despedida: TCHAU,
     horario: HOR([2,3,4,5,6], 'Estamos fechados agora (ter a sáb, 8h30–18h). Deixe sua mensagem! 💇'),
-    consulta: { termo: 'Agendamento', gatilhos: 'agendamento, reserva, codigo', chave: 'código' },
+    consulta: { termo: 'Agendamento', gatilhos: 'agendamento, reserva, codigo', chave: 'código', ocultar: 'cliente, telefone, cpf' },
     menu: [
       { titulo: 'Consultar meu agendamento', tipo: 'consulta', texto: 'Me envie o *código do agendamento*. 📅' },
       { titulo: 'Serviços e preços', tipo: 'texto', texto: '✂️ Corte — R$ 00\n💅 Manicure — R$ 00\n💆 Escova — R$ 00\n\n(edite os valores)' },
@@ -376,6 +441,8 @@ const MODELOS = {
     ],
     palavras: [
       { palavras: 'cancelar, remarcar, desmarcar', resposta: 'Pra remarcar ou cancelar, digite *3* e fale com a recepção.' },
+      { palavras: 'onde fica, localizacao', resposta: 'Digite *4* para ver o endereço. 📍' },
+      { palavras: 'que horas, aberto, abre, fecha, sabado, domingo, funcionamento', resposta: '🕗 Ter a sáb, 8h30–18h.' },
       { palavras: 'pix, cartao, pagamento', resposta: 'Aceitamos Pix, débito e crédito.' }
     ],
     planilhaCSV: 'código;cliente;serviço;data;hora;profissional\n7001;Pessoa 1;Corte;05/10;14h;Profissional A\n7002;Pessoa 2;Manicure;06/10;10h;Profissional B'
@@ -391,7 +458,26 @@ let cfg = load();
 let sessao = {}, busy = false;
 
 function load(){ try { const r = localStorage.getItem(KEY); if (r) { const o = JSON.parse(r); if (o && Array.isArray(o.menu)) return migrar(o); } } catch(e){} return clone(MODELO); }
-function migrar(o){ if (!o.consulta) o.consulta = { termo: 'OS', gatilhos: 'os, ordem, protocolo', chave: 'os' }; o.menu.forEach(m => { if (m.tipo === 'os') m.tipo = 'consulta'; }); return o; }
+function migrar(o){
+  if (!o.consulta) o.consulta = { termo: 'OS', gatilhos: 'os, ordem, protocolo', chave: 'os' };
+  if (o.consulta.ocultar === undefined) o.consulta.ocultar = 'cliente, telefone, cpf';
+  if (!Array.isArray(o.palavras)) o.palavras = [];
+  if (!o.horario) o.horario = { abre: '', fecha: '', msgFora: '' };
+  if (!Array.isArray(o.horario.dias)) o.horario.dias = [];
+  o.menu.forEach(m => { if (m.tipo === 'os') m.tipo = 'consulta'; });
+  return o;
+}
+// textos de exemplo que ainda não foram trocados pelos dados reais do negócio
+const EXEMPLO = [/exemplo/i, /coloque o link/i, /R\$ ?00\b/, /edite os valores/i, /Pessoa \d/];
+function pendencias(){
+  const a = [], ver = (onde, txt) => { if (EXEMPLO.some(r => r.test(txt || ''))) a.push(onde); };
+  ver('01 Negócio: nome', cfg.nome);
+  ver('02 Horário: mensagem fora do horário', cfg.horario.msgFora);
+  cfg.menu.forEach((m,i) => ver(`03 Menu: opção ${i+1}`, m.titulo + ' ' + m.texto));
+  cfg.palavras.forEach((p,i) => ver(`04 Palavras-chave: regra ${i+1}`, p.resposta));
+  ver('05 Planilha: ainda com os dados de exemplo', cfg.planilhaCSV);
+  return a;
+}
 function save(){ try { localStorage.setItem(KEY, JSON.stringify(cfg)); } catch(e){} refresh(); }
 const getP = (o,p) => p.split('.').reduce((a,k) => a == null ? a : a[k], o);
 const setP = (o,p,v) => { const ks = p.split('.'), l = ks.pop(); ks.reduce((a,k) => a[k], o)[l] = v; };
@@ -442,6 +528,8 @@ function renderAll(){ bindStatic(); renderDias(); renderMenu(); renderKw(); refr
 function refresh(){
   const j = $('#json'); if (document.activeElement !== j) j.value = JSON.stringify(cfg, null, 2);
   const n = Motor.tabela(cfg.planilhaCSV).length; $('#osCount').textContent = `✓ ${n} registro(s) na planilha`;
+  const pend = pendencias(), ul = $('#pend'); ul.innerHTML = ''; ul.classList.toggle('limpo', !pend.length);
+  (pend.length ? ['Ainda com texto de exemplo:', ...pend] : ['✓ Nenhum texto de exemplo sobrando.']).forEach((p,i) => { const li = document.createElement('li'); li.textContent = p; if (pend.length && i === 0) li.className = 'tit'; ul.append(li); });
   $('#chatName').textContent = cfg.nome || 'Seu negócio';
   $('#avatar').textContent = (cfg.nome || 'B').trim().charAt(0).toUpperCase();
   const C = Motor.conf(cfg), r0 = Motor.tabela(cfg.planilhaCSV)[0] || {}, k0 = r0[Motor.norm(C.chave)];
@@ -457,11 +545,11 @@ $('#addKw').onclick = () => { cfg.palavras.push({ palavras: '', resposta: '' });
 $('#copyJson').onclick = async () => {
   const txt = JSON.stringify(cfg, null, 2);
   try { await navigator.clipboard.writeText(txt); } catch(e){ const j = $('#json'); j.value = txt; j.select(); try { document.execCommand('copy'); } catch(_){} }
-  $('#ioMsg').textContent = '✓ JSON copiado';
+  $('#ioMsg').textContent = '✓ Copiado. Agora cole na célula A1 da aba Config.';
 };
 $('#importJson').onclick = () => {
-  try { const o = JSON.parse($('#json').value); if (!o || !Array.isArray(o.menu) || !o.horario) throw 0; cfg = migrar(o); save(); renderAll(); novaConversa(); $('#ioMsg').textContent = '✓ Bot importado'; }
-  catch(e){ $('#ioMsg').textContent = '✕ JSON inválido'; }
+  try { const o = JSON.parse($('#json').value); if (!o || !Array.isArray(o.menu) || !o.horario) throw 0; cfg = migrar(o); save(); renderAll(); novaConversa(); $('#ioMsg').textContent = '✓ Robô importado'; }
+  catch(e){ $('#ioMsg').textContent = '✕ Texto inválido. Cole o texto inteiro que foi copiado daqui.'; }
 };
 const selN = $('#nicho');
 Object.entries(MODELOS).forEach(([k,m]) => { const o = document.createElement('option'); o.value = k; o.textContent = m.nome; selN.append(o); });
@@ -495,7 +583,7 @@ async function enviar(texto){
     await espera(420 + Math.min(resp.length * 6, 700));
     t.remove(); bolha(resp, 'in');
   }
-  if (sessao.humano && r.respostas.length === 0) bolha('robô pausado · atendente humano', 'sys');
+  if (r.respostas.length === 0) bolha(sessao.humano ? 'robô pausado · atendente humano' : 'robô não responde a isso (ok, 👍…)', 'sys');
   busy = false;
 }
 function novaConversa(){ sessao = {}; chat.innerHTML = ''; bolha('nova conversa · você é o cliente', 'sys'); }
