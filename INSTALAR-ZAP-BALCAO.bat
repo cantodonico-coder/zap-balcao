@@ -17,7 +17,7 @@ cls
 echo.
 echo  ==========================================================
 echo     ZAP BALCÃO  -  Seu WhatsApp respondendo sozinho
-echo     Assistente de instalação  ·  NicoShake Labs
+echo     Assistente de instalação  ·  Inovação Labs
 echo  ==========================================================
 echo.
 echo   Você vai precisar de:

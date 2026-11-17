@@ -1,6 +1,6 @@
 /* =====================================================================
    ZAP BALCÃO — Adaptador MODO ECONÔMICO (AutoResponder for WA + Apps Script)
-   NicoShake Labs
+   Inovação Labs
    ---------------------------------------------------------------------
    Planilha do cliente (abas):
      Config → célula A1 = JSON exportado do editor Zap Balcão

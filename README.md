@@ -1,4 +1,4 @@
-# Zap Balcão · NicoShake Labs
+# Zap Balcão · Inovação Labs
 
 Robô de atendimento para WhatsApp, controlado por planilha Google.
 Foco inicial: **assistência técnica** (consulta de OS, orçamento, garantia, atendente humano).
